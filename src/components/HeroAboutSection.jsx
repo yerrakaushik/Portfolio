@@ -30,7 +30,19 @@ export default function HeroAboutSection() {
   const canvasScale = useTransform(
     scrollYProgress,
     [0, 0.5, 1],
-    isMobile ? [0.85, 0.85, 0.85] : [1, 0.95, 0.9]
+    isMobile ? [0.85, 0.85, 0.85] : [1.1, 1, 0.9]
+  );
+
+  const canvasRotate = useTransform(
+    scrollYProgress,
+    [0, 0.5, 1],
+    [0, 5, -5]
+  );
+
+  const canvasZ = useTransform(
+    scrollYProgress,
+    [0, 0.5, 1],
+    [100, 0, -100]
   );
 
   const canvasOpacity = useTransform(
@@ -40,18 +52,34 @@ export default function HeroAboutSection() {
   );
 
   return (
-    <div ref={containerRef} className="relative" style={{ height: '200vh' }}>
+    <div ref={containerRef} className="relative bg-white" style={{ height: '200vh' }}>
+      {/* Decorative 3D Background Elements */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <motion.div 
+          animate={{ rotate: 360 }} 
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute -top-24 -left-24 w-96 h-96 bg-blue-100/50 rounded-full blur-3xl" 
+        />
+        <motion.div 
+          animate={{ rotate: -360 }} 
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute top-1/2 -right-24 w-80 h-80 bg-orange-100/50 rounded-full blur-3xl" 
+        />
+      </div>
+
       {/* Sticky avatar layer */}
-      <div className="sticky top-0 h-screen w-full overflow-hidden pointer-events-none z-10">
-        <div className="absolute inset-0 flex items-center justify-center">
+      <div className="sticky top-0 h-screen w-full overflow-hidden pointer-events-none z-10 perspective-2000">
+        <div className="absolute inset-0 flex items-center justify-center preserve-3d">
           <motion.div
             className="absolute"
             style={{
               x: canvasX,
+              z: canvasZ,
+              rotateY: canvasRotate,
               scale: canvasScale,
               opacity: canvasOpacity,
-              width: isMobile ? '280px' : '700px',
-              height: isMobile ? '280px' : '700px',
+              width: isMobile ? '300px' : '850px',
+              height: isMobile ? '300px' : '850px',
             }}
           >
             <AvatarAnimation progress={scrollYProgress} />
@@ -67,3 +95,4 @@ export default function HeroAboutSection() {
     </div>
   );
 }
+

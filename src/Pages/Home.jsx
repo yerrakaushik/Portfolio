@@ -1,11 +1,7 @@
-import React, { useState, useEffect, memo } from "react";
+import React, { useState, useEffect, memo, useRef } from "react";
 import { Github, Linkedin, Mail, ArrowUpRight, Code2, Briefcase } from "lucide-react";
-import { motion, useScroll, useTransform } from "framer-motion";
-import Spline from "@splinetool/react-spline";
+import { motion, useScroll, useTransform, useSpring, useMotionValue } from "framer-motion";
 
-
-
-// Typewriter effect component
 const TypeWriter = ({ words }) => {
   const [text, setText] = useState("");
   const [wordIdx, setWordIdx] = useState(0);
@@ -47,143 +43,138 @@ const TypeWriter = ({ words }) => {
 };
 
 const SocialLink = ({ icon: Icon, href, label }) => (
-  <a
+  <motion.a
+    whileHover={{ y: -5, scale: 1.1 }}
+    whileTap={{ scale: 0.9 }}
     href={href}
     target="_blank"
     rel="noreferrer"
-    className="group relative p-3 rounded-full border transition-all duration-300 hover:scale-105"
-    style={{ borderColor: "var(--border-color)", background: "var(--card-bg)" }}
+    className="group relative p-4 rounded-2xl border transition-all duration-300 backdrop-blur-sm"
+    style={{ borderColor: "rgba(0,0,0,0.1)", background: "rgba(255,255,255,0.8)" }}
     aria-label={label}
   >
-    <Icon className="w-5 h-5 transition-colors duration-300 group-hover:text-[var(--primary)] text-[var(--text-secondary)]" />
-  </a>
+    <Icon className="w-5 h-5 transition-colors duration-300 group-hover:text-[var(--primary)] text-gray-500" />
+  </motion.a>
 );
 
 const Home = () => {
   const [isLoaded, setIsLoaded] = useState(false);
-  const { scrollY } = useScroll();
-  const yText = useTransform(scrollY, [0, 500], [0, 100]);
-  const yAvatar = useTransform(scrollY, [0, 500], [0, -50]);
+  const containerRef = useRef(null);
+  
+  // Mouse parallax effect
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const springX = useSpring(mouseX, { stiffness: 100, damping: 30 });
+  const springY = useSpring(mouseY, { stiffness: 100, damping: 30 });
 
-  useEffect(() => { setIsLoaded(true); }, []);
+  const rotateX = useTransform(springY, [-300, 300], [10, -10]);
+  const rotateY = useTransform(springX, [-300, 300], [-10, 10]);
 
-  const roles = [
-    "Full Stack Developer",
-    "Freelancer",
-    "Tech Innovator"
-  ];
+  useEffect(() => {
+    setIsLoaded(true);
+    const handleMouseMove = (e) => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      mouseX.set(e.clientX - centerX);
+      mouseY.set(e.clientY - centerY);
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX, mouseY]);
+
+  const roles = ["Full Stack Developer", "Freelancer", "Tech Innovator"];
 
   return (
-    <div
-      className="min-h-screen overflow-hidden relative"
-      id="Home"
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-[10%] pt-32 pb-20">
-        <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between min-h-[80vh]">
+    <div ref={containerRef} className="min-h-screen relative overflow-hidden flex items-center justify-center py-20" id="Home">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 w-full">
+        <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between">
           
           {/* Left column - Text Content */}
           <motion.div
-            style={{ y: yText }}
-            className="w-full lg:w-[55%] space-y-8 text-left order-2 lg:order-1 mt-12 lg:mt-0"
+            style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+            className="w-full lg:w-[60%] space-y-10 text-left order-2 lg:order-1 mt-16 lg:mt-0 perspective-1000"
           >
             {/* Status badge */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border shadow-sm bg-white"
-              style={{ borderColor: "var(--border-color)" }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="inline-flex items-center gap-3 px-5 py-2.5 rounded-2xl border shadow-xl bg-white/90 backdrop-blur-md"
+              style={{ borderColor: "rgba(0,0,0,0.05)", transform: "translateZ(50px)" }}
             >
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-sm font-medium text-[var(--text-secondary)]">
-                Available for Projects & Internships
+              <div className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-500">
+                Available for New Challenges
               </span>
             </motion.div>
 
             {/* Headline */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 30 }}
-              transition={{ duration: 0.8, delay: 0.1 }}
-              className="space-y-4"
-            >
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight tracking-tight">
-                Crafting digital <br />
-                experiences as a <br />
-                <TypeWriter words={roles} />
+            <div className="space-y-6" style={{ transform: "translateZ(80px)" }}>
+              <h1 className="text-6xl sm:text-7xl lg:text-9xl font-black leading-[0.9] tracking-tight uppercase">
+                Digital <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--primary)] to-blue-400">Architect</span>
               </h1>
               
-              <p className="text-lg sm:text-xl text-[var(--text-secondary)] max-w-xl leading-relaxed">
-                I bridge the gap between design and technical implementation, creating robust cloud solutions and intuitive frontend interfaces.
-              </p>
-            </motion.div>
+              <div className="flex flex-col gap-4">
+                <p className="text-xl sm:text-2xl text-gray-500 font-medium max-w-xl leading-relaxed">
+                  Building the future with <br />
+                  <TypeWriter words={roles} />
+                </p>
+              </div>
+            </div>
 
-            {/* Badges */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-wrap gap-4"
-            >
-              <div className="flex items-center gap-2 px-4 py-2 rounded-lg border bg-white" style={{ borderColor: "var(--border-color)" }}>
-                <Code2 className="w-4 h-4 text-[var(--primary)]" />
-                <span className="font-medium text-sm text-[var(--text-primary)]">Student</span>
+            {/* Badges/Info */}
+            <div className="flex flex-wrap gap-6" style={{ transform: "translateZ(40px)" }}>
+              <div className="space-y-1">
+                <p className="text-[10px] uppercase tracking-widest font-bold text-gray-400">Specialization</p>
+                <p className="font-bold text-lg">Cloud Infrastructure</p>
               </div>
-              <div className="flex items-center gap-2 px-4 py-2 rounded-lg border bg-white" style={{ borderColor: "var(--border-color)" }}>
-                <Briefcase className="w-4 h-4 text-[var(--secondary)]" />
-                <span className="font-medium text-sm text-[var(--text-primary)]">Freelancer</span>
+              <div className="w-px h-10 bg-gray-200" />
+              <div className="space-y-1">
+                <p className="text-[10px] uppercase tracking-widest font-bold text-gray-400">Experience</p>
+                <p className="font-bold text-lg">2+ Years Active</p>
               </div>
-            </motion.div>
+            </div>
 
             {/* Actions */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: isLoaded ? 1 : 0, y: isLoaded ? 0 : 20 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="flex flex-wrap items-center gap-4 pt-4"
-            >
-              <a href="#Contact">
+            <div className="flex flex-wrap items-center gap-6 pt-8" style={{ transform: "translateZ(60px)" }}>
+              <motion.a 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                href="#Contact"
+              >
                 <button
-                  className="px-8 py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-transform hover:scale-105 active:scale-95 text-white"
+                  className="px-10 py-5 rounded-2xl font-black uppercase tracking-tighter flex items-center justify-center gap-3 transition-shadow hover:shadow-[0_20px_50px_rgba(0,85,255,0.3)] text-white"
                   style={{ background: "var(--primary)" }}
                 >
-                  Start a Project
-                  <ArrowUpRight className="w-5 h-5" />
+                  Contact Me
+                  <ArrowUpRight className="w-6 h-6" />
                 </button>
-              </a>
+              </motion.a>
               
-              <div className="flex items-center gap-3 ml-4">
-                <SocialLink icon={Github} href="https://github.com/KaushikYerra" label="GitHub" />
+              <div className="flex items-center gap-4">
+                <SocialLink icon={Github} href="https://github.com/yerrakaushik" label="GitHub" />
                 <SocialLink icon={Linkedin} href="https://linkedin.com/in/kaushikyerra" label="LinkedIn" />
-                <SocialLink icon={Mail} href="mailto:kaushik.yerra@example.com" label="Email" />
               </div>
-            </motion.div>
+            </div>
           </motion.div>
 
-        {/* Right column - Avatar Space */}
-          <motion.div
-            style={{ y: yAvatar }}
-            className="w-full lg:w-[45%] order-1 lg:order-2 flex items-center justify-center relative min-h-[400px]"
-          >
-            {/* The avatar canvas will be rendered here by the parent wrapper */}
-          </motion.div>
+          {/* Right column - Reserved for Avatar */}
+          <div className="w-full lg:w-[40%] order-1 lg:order-2 min-h-[500px]" />
 
         </div>
       </div>
       
       {/* Scroll Indicator */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isLoaded ? 1 : 0 }}
-        transition={{ delay: 1, duration: 1 }}
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2"
+        animate={{ y: [0, 10, 0] }}
+        transition={{ duration: 2, repeat: Infinity }}
+        className="absolute bottom-12 left-12 flex flex-col items-center gap-4"
       >
-        <span className="text-xs uppercase tracking-widest font-semibold text-[var(--text-secondary)]">Scroll</span>
-        <div className="w-[1px] h-12 bg-gray-200 relative overflow-hidden">
-          <div className="w-full h-1/2 bg-[var(--primary)] absolute top-0 left-0 animate-scroll-indicator" />
-        </div>
+        <div className="w-px h-24 bg-gradient-to-b from-[var(--primary)] to-transparent opacity-50" />
+        <span className="text-[10px] font-bold uppercase tracking-[0.3em] rotate-180 [writing-mode:vertical-lr] text-gray-400">Explore</span>
       </motion.div>
-      
     </div>
   );
 };

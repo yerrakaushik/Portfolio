@@ -1,89 +1,68 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CardProject from "../components/CardProject";
-import AOS from "aos";
-import "aos/dist/aos.css";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { projects as localProjects } from "../data/projects.js";
 
-// ── Toggle Button ─────────────────────────────────────────────────────
 const ToggleButton = ({ onClick, isShowingMore }) => (
-  <div className="flex justify-center mt-6">
+  <div className="flex justify-center mt-16">
     <motion.button
-      whileHover={{ scale: 1.04 }}
-      whileTap={{ scale: 0.97 }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
       onClick={onClick}
-      className="flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold bg-white border shadow-sm transition-all hover:shadow-md"
-      style={{
-        borderColor: "var(--border-color)",
-        color: "var(--text-primary)",
-      }}
+      className="flex items-center gap-3 px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest bg-white border border-gray-100 shadow-2xl transition-all"
     >
-      {isShowingMore ? "See Less" : "See More"}
-      {isShowingMore ? <ChevronUp className="w-4 h-4 text-[var(--primary)]" /> : <ChevronDown className="w-4 h-4 text-[var(--primary)]" />}
+      {isShowingMore ? "Collapse Grid" : "Expand Grid"}
+      {isShowingMore ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
     </motion.button>
   </div>
 );
 
-// ── Section Header ────────────────────────────────────────────────────
-const SectionHeader = () => (
-  <div className="text-center pb-12">
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.7 }}
-    >
-      <h2
-        className="text-4xl md:text-5xl font-bold"
-        style={{ color: "var(--text-primary)" }}
-      >
-        Projects
-      </h2>
-      <div className="w-24 h-1 mx-auto mt-4 rounded-full bg-[var(--primary)]" />
-      <p className="mt-4 max-w-2xl mx-auto text-sm md:text-lg font-medium" style={{ color: "var(--text-secondary)" }}>
-        A collection of my technical work, showcasing problem-solving and full-stack development.
-      </p>
-    </motion.div>
-  </div>
-);
-
-// ── Main Component ────────────────────────────────────────────────────
 export default function Projects() {
   const [projects] = useState(localProjects);
   const [showAllProjects, setShowAllProjects] = useState(false);
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const initialItems = isMobile ? 4 : 6;
 
-  useEffect(() => {
-    AOS.init({ once: true });
-  }, []);
-
   const displayedProjects = showAllProjects ? projects : projects.slice(0, initialItems);
 
   return (
-    <div
-      className="md:px-[10%] px-[5%] w-full sm:mt-0 mt-12 overflow-hidden py-20 relative bg-white"
-      id="Projects"
-    >
-      <SectionHeader />
+    <div className="min-h-screen py-32 relative bg-white overflow-hidden" id="Projects">
+      {/* Decorative Background Elements */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-orange-50 opacity-50 blur-[100px] rounded-full" />
+        <div className="absolute bottom-1/4 left-0 w-[500px] h-[500px] bg-blue-50 opacity-50 blur-[100px] rounded-full" />
+      </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key="projects"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.4 }}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-5">
+      <div className="max-w-7xl mx-auto px-4 relative z-10">
+        <div className="text-center mb-24">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            className="text-6xl md:text-8xl font-black tracking-tighter uppercase mb-6"
+          >
+            Showcase<span className="text-[var(--primary)]">.</span>
+          </motion.h2>
+          <p className="max-w-2xl mx-auto text-xl font-medium text-gray-500 uppercase tracking-widest">
+            A Curated Selection of High-Impact Technical Solutions
+          </p>
+        </div>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={showAllProjects ? "all" : "limited"}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10"
+          >
             {displayedProjects.map((project, i) => (
               <motion.div
                 key={project.id || i}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.5 }}
+                transition={{ delay: (i % 3) * 0.1, duration: 0.8 }}
               >
                 <CardProject
                   Img={project.Img}
@@ -94,17 +73,16 @@ export default function Projects() {
                 />
               </motion.div>
             ))}
-          </div>
-          {projects.length > initialItems && (
-            <div className="mt-6">
-              <ToggleButton
-                onClick={() => setShowAllProjects(p => !p)}
-                isShowingMore={showAllProjects}
-              />
-            </div>
-          )}
-        </motion.div>
-      </AnimatePresence>
+          </motion.div>
+        </AnimatePresence>
+
+        {projects.length > initialItems && (
+          <ToggleButton
+            onClick={() => setShowAllProjects(p => !p)}
+            isShowingMore={showAllProjects}
+          />
+        )}
+      </div>
     </div>
   );
 }
